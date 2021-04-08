@@ -10,7 +10,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 )
 
 const g_version = "dcompress.go version 0.1.0"
@@ -31,14 +30,8 @@ const (
 var (
 	VerboseFlag bool
 	//g_cBytes    []byte // compressed bytes
-	g_inbuf    []byte // unpacking temp area
-	g_outbuf   []byte // output staging area
-	MagicBytes = []byte{0x1f, 0x9d}
 
-	// hashTable - [hSize] unsigned long  in original, but used with byte level access
-	// using *--stackp as one example  go doesn't have pointer arith so we adapt
-	g_htab    [hSize * 8]byte
-	g_codetab [hSize]uint16 // codeTable must be uint16
+	MagicBytes = []byte{0x1f, 0x9d}
 )
 
 /*
@@ -48,6 +41,7 @@ func fatalErr(erx error) {
 }
 */
 
+/*
 func dumpIn(s string) {
 	if len(g_inbuf) < 8 {
 		log.Panicf("cant dump inbuf")
@@ -75,7 +69,9 @@ func dumpOut(s string) {
 		fmt.Printf(")\n")
 	}
 }
+*/
 
+/*
 func dumpHTAB(s string) {
 	fmt.Printf("%s\n", s)
 	for ndx, val := range g_htab {
@@ -85,6 +81,7 @@ func dumpHTAB(s string) {
 		}
 	}
 }
+*/
 
 // NOTES:
 //  Z is a compression technique, not an archiver.
@@ -103,6 +100,15 @@ func NewReader(r io.Reader) (io.Reader, error) {
 	// NOTE BENE: sections that start with if DEBUG or if BUG will be removed by the compiler
 	// since they compile to if false.  Leaving them in for now won't hurt anything.  Once code is
 	// tested fully they can be stripped.
+
+	var (
+		// hashTable - [hSize] unsigned long  in original, but used with byte level access
+		// using *--stackp as one example  go doesn't have pointer arith so we adapt
+		g_htab    [hSize * 8]byte
+		g_codetab [hSize]uint16 // codeTable must be uint16
+		g_inbuf   []byte        // unpacking temp area
+		g_outbuf  []byte        // output staging area
+	)
 
 	type code_int int64
 
@@ -153,9 +159,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 		fmt.Printf("Sizeof(outbuf)= %d\n", len(g_outbuf)*1)
 	}
 
-	if DEBUG == 1 {
-		dumpIn("program startup")
-	}
+	/*
+		if DEBUG == 1 {
+			dumpIn("program startup")
+		}
+	*/
 
 	rsize, err = r.Read(g_inbuf[0:iBufSize])
 	if rsize == 0 && err != nil {
@@ -163,9 +171,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 		return nil, err
 	}
 	insize += rsize
-	if DEBUG == 1 {
-		dumpIn("after first read")
-	}
+	/*
+		if DEBUG == 1 {
+			dumpIn("after first read")
+		}
+	*/
 	if DEBUG == 1 {
 		fmt.Printf("insize(%d) rsize(%d)\n", insize, rsize)
 	}
@@ -247,9 +257,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 		if DEBUG == 1 {
 			fmt.Printf("iBufSize(%d)\n", iBufSize)
 		}
-		if DEBUG == 1 {
-			dumpIn("after copy")
-		}
+		/*
+			if DEBUG == 1 {
+				dumpIn("after copy")
+			}
+		*/
 		//																			? B U F E M P T Y
 		if BUG == 1 {
 			fmt.Printf("insize(%d) Sizeof(inbuf)-iBufSize = %d\n",
@@ -271,7 +283,7 @@ func NewReader(r io.Reader) (io.Reader, error) {
 			}
 			if BUG == 1 {
 				fmt.Printf("read() added rsize(%d) to insize(%d) )\n", rsize, insize)
-				dumpIn("after read insize")
+				//dumpIn("after read insize")
 			}
 			insize += rsize
 		}
@@ -312,9 +324,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 				fmt.Printf("before input() posbits(%d) code(%02x) n_bits(%d) bitmask(%x) ",
 					posbits, uint(code), n_bits, bitmask)
 			}
-			if DEBUG == 1 {
-				dumpIn("before input of code")
-			}
+			/*
+				if DEBUG == 1 {
+					dumpIn("before input of code")
+				}
+			*/
 
 			/*	#define	input(inbuf,posbits,code,n_bits,bitmask){
 				REG1 char_type 		*p = &(inbuf)[(posbits)>>3];			\
@@ -547,11 +561,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 	if BUG == 1 {
 		fmt.Printf("outpos(%d) \n", outpos)
 	}
-	if DEBUG == 1 {
-		dumpIn("end of run")
-		dumpOut("end of run")
-		dumpHTAB("end of run")
-	}
+	//if DEBUG == 1 {
+	//dumpIn("end of run")
+	//dumpOut("end of run")
+	//dumpHTAB("end of run")
+	//}
 	// BUG(mdr): <kludge alert>
 	outBuf[0] = firstChar
 	// </kludge>
