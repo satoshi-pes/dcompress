@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 )
 
 const g_version = "dcompress.go version 0.1.0"
@@ -42,10 +41,12 @@ var (
 	g_codetab [hSize]uint16 // codeTable must be uint16
 )
 
+/*
 func fatalErr(erx error) {
 	log.Panicf("%v\n", erx)
 	os.Exit(1)
 }
+*/
 
 func dumpIn(s string) {
 	if len(g_inbuf) < 8 {
@@ -157,8 +158,9 @@ func NewReader(r io.Reader) (io.Reader, error) {
 	}
 
 	rsize, err = r.Read(g_inbuf[0:iBufSize])
-	if err != nil {
-		fatalErr(err)
+	if rsize == 0 && err != nil {
+		//fatalErr(err)
+		return nil, err
 	}
 	insize += rsize
 	if DEBUG == 1 {
@@ -168,7 +170,8 @@ func NewReader(r io.Reader) (io.Reader, error) {
 		fmt.Printf("insize(%d) rsize(%d)\n", insize, rsize)
 	}
 	if (g_inbuf[0] != MagicBytes[0]) || (g_inbuf[1] != MagicBytes[1]) {
-		fatalErr(ErrBadMagic)
+		//fatalErr(ErrBadMagic)
+		return nil, ErrBadMagic
 	}
 
 	if DEBUG == 1 {
@@ -183,7 +186,8 @@ func NewReader(r io.Reader) (io.Reader, error) {
 			maxbits, block_mode, maxmaxcode)
 	}
 	if maxbits > nBits {
-		fatalErr(ErrMaxBitsExcd)
+		//fatalErr(ErrMaxBitsExcd)
+		return nil, ErrMaxBitsExcd
 	}
 	// --- line 1650 in compress42.c ---
 	bytes_in = insize
@@ -258,9 +262,11 @@ func NewReader(r io.Reader) (io.Reader, error) {
 				if err == io.EOF {
 					// not an error
 				} else {
-					fmt.Printf("rsize(%d), insize(%d) len(inbuf)- iBufSize(%d)\n",
-						rsize, insize, len(g_inbuf)-iBufSize)
-					fatalErr(err)
+					//fmt.Printf("rsize(%d), insize(%d) len(inbuf)- iBufSize(%d)\n",
+					//	rsize, insize, len(g_inbuf)-iBufSize)
+					//fatalErr(err)
+					return nil, fmt.Errorf("rsize(%d), insize(%d) len(inbuf)- iBufSize(%d): %s",
+						rsize, insize, len(g_inbuf)-iBufSize, err)
 				}
 			}
 			if BUG == 1 {
@@ -350,7 +356,8 @@ func NewReader(r io.Reader) (io.Reader, error) {
 			}
 			if oldcode == -1 {
 				if code >= 256 {
-					fatalErr(ErrOther)
+					//fatalErr(ErrOther)
+					return nil, ErrOther
 				}
 				oldcode = code
 				finchar = int(oldcode)
