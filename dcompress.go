@@ -84,13 +84,18 @@ func dumpHTAB(s string) {
 */
 
 // NOTES:
-//  Z is a compression technique, not an archiver.
+//
+//	Z is a compression technique, not an archiver.
+//
 // NewReader will create a local copy of the uncompressed data.
-//Note that this will set upper limit on the size of an individual readable file.
+// Note that this will set upper limit on the size of an individual readable file.
+//
 //	Memory use expected to be < (CompressedFileSize * 10) for non-pathological cases.
 //	Unpacks 23 MB in less than one second on 4 Ghz AMD 64 (8120^OC).
+//
 // Go code is based on literal translation of compress42.c (ie it's not idiomatic
 // nor is it pretty) See doc.go for credits to the original writer(s)
+//
 //	Kludge is to fix a problem with first character being written to output buffer as zero always.
 //	We save first output character and then patch it into outbuf at end.  Not sure why this happens.
 //	Other than the kludge it's a very literal translation of compress42.c
@@ -567,7 +572,9 @@ func NewReader(r io.Reader) (io.Reader, error) {
 	//dumpHTAB("end of run")
 	//}
 	// BUG(mdr): <kludge alert>
-	outBuf[0] = firstChar
+	if len(outBuf) > 0 {
+		outBuf[0] = firstChar
+	}
 	// </kludge>
 	byteReader := bytes.NewReader(outBuf)
 	return byteReader, nil
